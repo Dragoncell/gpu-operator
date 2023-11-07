@@ -57,10 +57,12 @@ validator:
         value: "false"
 
 operator:
-  repository: nvcr.io/nvidia
+  # repository: nvcr.io/nvidia
+  # image: gpu-operator
+  repository: gcr.io/jiamingxu-gke-dev
   image: gpu-operator
   # If version is not specified, then default is to use chart.AppVersion
-  #version: ""
+  version: "v11"
   imagePullPolicy: IfNotPresent
   imagePullSecrets: []
   priorityClassName: system-node-critical

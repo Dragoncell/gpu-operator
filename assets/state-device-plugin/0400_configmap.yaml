@@ -32,5 +32,14 @@ data:
     export CONTAINER_DRIVER_ROOT=$container_driver_root
     echo "CONTAINER_DRIVER_ROOT=$CONTAINER_DRIVER_ROOT"
 
+    export NVIDIA_CTK_PATH=/home/kubernetes/bin/nvidia/bin/nvidia-ctk
+    echo "NVIDIA_CTK_PATH=$NVIDIA_CTK_PATH"
+
+    export PATH="$PATH:/home/kubernetes/bin/nvidia/bin";
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/kubernetes/bin/nvidia/lib64;
+
+    echo "setting up the path"
+
     echo "Starting nvidia-device-plugin"
-    exec nvidia-device-plugin
+    exec nvidia-device-plugin --nvidia-ctk-path /home/kubernetes/bin/nvidia/bin/nvidia-ctk
+

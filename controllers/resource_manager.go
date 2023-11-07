@@ -105,6 +105,7 @@ func addResourcesControls(n *ClusterPolicyController, path string) (Resources, c
 		kind = strings.TrimSpace(slce[1])
 
 		n.rec.Log.V(1).Info("Looking for ", "Kind", kind, "in path:", path)
+    n.rec.Log.Info("Looking for ", "Kind", kind, "in path:", path)
 
 		switch kind {
 		case "ServiceAccount":
