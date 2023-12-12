@@ -69,8 +69,8 @@ spec:
           value: "management.nvidia.com/gpu"
         - name: NVIDIA_VISIBLE_DEVICES
           value: "void"
-        - name: NVIDIA_DRIVER_ROOT
-          value: "/home/kubernetes/bin/nvidia"
+        - name: CREATE_DEVICE_NODES
+          value: ""
         imagePullPolicy: IfNotPresent
         name: nvidia-container-toolkit-ctr
         securityContext:

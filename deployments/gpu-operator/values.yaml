@@ -62,7 +62,7 @@ operator:
   repository: gcr.io/jiamingxu-gke-dev
   image: gpu-operator
   # If version is not specified, then default is to use chart.AppVersion
-  version: "v19"
+  version: "v018"
   imagePullPolicy: IfNotPresent
   imagePullSecrets: []
   priorityClassName: system-node-critical
@@ -215,9 +215,9 @@ driver:
 
 toolkit:
   enabled: true
-  repository: nvcr.io/nvidia/k8s
+  repository: gcr.io/jiamingxu-gke-dev
   image: container-toolkit
-  version: v1.13.4-ubuntu20.04
+  version: v4
   imagePullPolicy: IfNotPresent
   imagePullSecrets: []
   env: []
