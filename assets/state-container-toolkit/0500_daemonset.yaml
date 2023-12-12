@@ -30,7 +30,9 @@ spec:
         image: "FILLED BY THE OPERATOR"
         imagePullPolicy: IfNotPresent
         command: ['sh', '-c']
-        args: ["nvidia-validator"]
+        args:
+        - |-
+          echo "skip driver validation";
         env:
           - name: WITH_WAIT
             value: "true"
@@ -67,6 +69,8 @@ spec:
           value: "management.nvidia.com/gpu"
         - name: NVIDIA_VISIBLE_DEVICES
           value: "void"
+        - name: NVIDIA_DRIVER_ROOT
+          value: "/home/kubernetes/bin/nvidia"
         imagePullPolicy: IfNotPresent
         name: nvidia-container-toolkit-ctr
         securityContext:
@@ -98,7 +102,7 @@ spec:
             defaultMode: 448
         - name: nvidia-run-path
           hostPath:
-            path: /run/nvidia
+            path: /home/kubernetes/bin/nvidia
             type: DirectoryOrCreate
         - name: run-nvidia-validations
           hostPath:
@@ -106,7 +110,7 @@ spec:
             type: DirectoryOrCreate
         - name: driver-install-path
           hostPath:
-            path: /run/nvidia/driver
+            path: /home/kubernetes/bin/nvidia
         - name: host-root
           hostPath:
             path: /

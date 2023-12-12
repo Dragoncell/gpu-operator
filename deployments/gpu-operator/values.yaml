@@ -62,7 +62,7 @@ operator:
   repository: gcr.io/jiamingxu-gke-dev
   image: gpu-operator
   # If version is not specified, then default is to use chart.AppVersion
-  version: "v11"
+  version: "v19"
   imagePullPolicy: IfNotPresent
   imagePullSecrets: []
   priorityClassName: system-node-critical
@@ -222,7 +222,7 @@ toolkit:
   imagePullSecrets: []
   env: []
   resources: {}
-  installDir: "/usr/local/nvidia"
+  installDir: "/home/kubernetes/bin/nvidia"
 
 devicePlugin:
   enabled: true
