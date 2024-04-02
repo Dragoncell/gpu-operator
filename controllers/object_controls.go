@@ -168,6 +168,12 @@ const (
 	MPSRootEnvName = "MPS_ROOT"
 	// DefaultMPSRoot is the default MPS root path on the host
 	DefaultMPSRoot = "/run/nvidia/mps"
+	// NvidiaHostRootEnvName is the name of envvar for specifying a custom path for the host root
+	NvidiaHostRootEnvName = "NVIDIA_CUSTOM_HOST_ROOT"
+	// NvidiaDriverRootEnvName is the name of envvar for specifying a custom path for the driver root
+	NvidiaDriverRootEnvName = "NVIDIA_CUSTOM_DRIVER_ROOT"
+	// NvidiaDevRootEnvName is the name of envvar for specifying a custom path for the dev root
+	NvidiaDevRootEnvName = "NVIDIA_CUSTOM_DEV_ROOT"
 )
 
 // ContainerProbe defines container probe types
@@ -1213,6 +1219,40 @@ func TransformToolkit(obj *appsv1.DaemonSet, config *gpuv1.ClusterPolicySpec, n 
 			}
 		}
 	}
+
+	// set host root path
+	if hostRoot := config.HostRoot; hostRoot != "" {
+		for index, volume := range obj.Spec.Template.Spec.Volumes {
+			if volume.Name == "host-root" {
+				obj.Spec.Template.Spec.Volumes[index].HostPath.Path = hostRoot
+			}
+		}
+		for index := range obj.Spec.Template.Spec.Containers {
+			setContainerEnv(&(obj.Spec.Template.Spec.Containers[index]), NvidiaHostRootEnvName, hostRoot)
+		}
+	}
+
+	// set driver root path
+	if driverRoot := config.DriverRoot; driverRoot != "" {
+		for index, volume := range obj.Spec.Template.Spec.Volumes {
+			if volume.Name == "driver-install-path" {
+				obj.Spec.Template.Spec.Volumes[index].HostPath.Path = driverRoot
+			}
+		}
+		for index := range obj.Spec.Template.Spec.Containers {
+			setContainerEnv(&(obj.Spec.Template.Spec.Containers[index]), NvidiaDriverRootEnvName, driverRoot)
+		}
+	}
+
+	// set dev root path
+	if devRoot := config.DevRoot; devRoot != "" {
+		// If devRoot is specified, create device nodes should be disabled
+		for index := range obj.Spec.Template.Spec.Containers {
+			setContainerEnv(&(obj.Spec.Template.Spec.Containers[index]), NvidiaDevRootEnvName, devRoot)
+			setContainerEnv(&(obj.Spec.Template.Spec.Containers[index]), "CREATE_DEVICE_NODES", "")
+		}
+	}
+
 	return nil
 }
 
@@ -1296,6 +1336,25 @@ func TransformDevicePlugin(obj *appsv1.DaemonSet, config *gpuv1.ClusterPolicySpe
 			}
 		}
 		setContainerEnv(&(obj.Spec.Template.Spec.Containers[0]), MPSRootEnvName, config.DevicePlugin.MPS.Root)
+	}
+
+	// set host root path
+	if hostRoot := config.HostRoot; hostRoot != "" {
+		for index, volume := range obj.Spec.Template.Spec.Volumes {
+			if volume.Name == "host-root" {
+				obj.Spec.Template.Spec.Volumes[index].HostPath.Path = hostRoot
+			}
+		}
+		for index := range obj.Spec.Template.Spec.Containers {
+			setContainerEnv(&(obj.Spec.Template.Spec.Containers[index]), NvidiaHostRootEnvName, hostRoot)
+		}
+	}
+
+	// set driver root path
+	if driverRoot := config.DriverRoot; driverRoot != "" {
+		for index := range obj.Spec.Template.Spec.Containers {
+			setContainerEnv(&(obj.Spec.Template.Spec.Containers[index]), NvidiaDriverRootEnvName, driverRoot)
+		}
 	}
 
 	return nil
@@ -1984,6 +2043,24 @@ func TransformValidator(obj *appsv1.DaemonSet, config *gpuv1.ClusterPolicySpec, 
 
 	if validatorErr != nil {
 		n.logger.Info("WARN: errors transforming the validator containers: %v", validatorErr)
+	}
+
+  // set host root path
+	if hostRoot := config.HostRoot; hostRoot != "" {
+		for index, volume := range obj.Spec.Template.Spec.Volumes {
+			if volume.Name == "host-root" {
+				obj.Spec.Template.Spec.Volumes[index].HostPath.Path = hostRoot
+			}
+		}
+	}
+
+	// set driver root path
+	if driverRoot := config.DriverRoot; driverRoot != "" {
+		for index, volume := range obj.Spec.Template.Spec.Volumes {
+			if volume.Name == "driver-install-path" {
+				obj.Spec.Template.Spec.Volumes[index].HostPath.Path = driverRoot
+			}
+		}
 	}
 
 	return nil

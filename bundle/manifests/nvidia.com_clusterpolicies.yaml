@@ -1155,6 +1155,15 @@ spec:
                     description: GFD image tag
                     type: string
                 type: object
+              hostRoot:
+                description: 'Optional: Host root path, needs to be a chroot dir'
+                type: string
+              driverRoot:
+                description: 'Optional: Host driver installed path'
+                type: string
+              devRoot:
+                description: 'Optional: dev root path, driver device installed path'
+                type: string
               kataManager:
                 description: KataManager component spec
                 properties:

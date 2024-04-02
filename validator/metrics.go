@@ -236,7 +236,7 @@ func (nm *NodeMetrics) watchDriverValidation() {
 	driver := &Driver{}
 
 	for {
-		_, _, err := driver.runValidation(true)
+		_, _, err, _ := driver.runValidation(true)
 		if err == nil {
 			nm.driverValidation.Set(1)
 			nm.driverValidationLastSuccess.Set(float64(time.Now().Unix()))

@@ -88,6 +88,12 @@ type ClusterPolicySpec struct {
 	KataManager KataManagerSpec `json:"kataManager,omitempty"`
 	// CCManager component spec
 	CCManager CCManagerSpec `json:"ccManager,omitempty"`
+	// Optional: Host root path
+	HostRoot string `json:"hostRoot,omitempty"`
+	// Optional: Driver root path
+	DriverRoot string `json:"driverRoot,omitempty"`
+	// Optional: Dev root path
+	DevRoot string `json:"devRoot,omitempty"`
 }
 
 // Runtime defines container runtime type

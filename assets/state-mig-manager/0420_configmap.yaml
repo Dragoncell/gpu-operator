@@ -15,8 +15,12 @@ data:
     while true; do
       if [[ -f /run/nvidia/validations/host-driver-ready ]]; then
         host_driver=true
-        driver_root="/"
-        driver_root_ctr_path="/host"
+        driver_root="${NVIDIA_CUSTOM_DRIVER_ROOT:=/}"
+        driver_root_ctr_path="${NVIDIA_CUSTOM_DRIVER_ROOT:=/host}"
+        # update driver_root_ctr_path when custom driver and host root are the same
+        if [[ "${NVIDIA_CUSTOM_DRIVER_ROOT}" = "${NVIDIA_CUSTOM_HOST_ROOT}" ]]; then
+          driver_root_ctr_path=/host
+        fi
         break
       elif [[ -f /run/nvidia/validations/driver-ready ]]; then
         host_driver=false

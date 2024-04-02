@@ -67,6 +67,12 @@ spec:
           value: "management.nvidia.com/gpu"
         - name: NVIDIA_VISIBLE_DEVICES
           value: "void"
+        - name: NVIDIA_CUSTOM_HOST_ROOT
+          value: ""
+        - name: NVIDIA_CUSTOM_DRIVER_ROOT
+          value: ""
+        - name: NVIDIA_CUSTOM_DEV_ROOT
+          value: ""
         imagePullPolicy: IfNotPresent
         name: nvidia-container-toolkit-ctr
         securityContext:

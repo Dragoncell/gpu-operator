@@ -11,13 +11,23 @@ data:
 
     set -e
 
+    dev_root=/run/nvidia/driver
+    dev_root_ctr_path=$dev_root
     driver_root=/run/nvidia/driver
     driver_root_ctr_path=$driver_root
     if [[ -f /run/nvidia/validations/host-driver-ready ]]; then
-      driver_root=/
-      driver_root_ctr_path=/host
+      dev_root=${NVIDIA_CUSTOM_DEV_ROOT:=/}
+      dev_root_ctr_path=/host
+      driver_root=${NVIDIA_CUSTOM_DRIVER_ROOT:=/}
+      driver_root_ctr_path=${NVIDIA_CUSTOM_DRIVER_ROOT:=/host}
+      # update driver_root_ctr_path when custom driver and host root are the same
+      if [[ "${NVIDIA_CUSTOM_DRIVER_ROOT}" = "${NVIDIA_CUSTOM_HOST_ROOT}" ]]; then
+        driver_root_ctr_path=/host
+      fi
     fi
 
+    export NVIDIA_DEV_ROOT=$dev_root
+    export DEV_ROOT_CTR_PATH=$dev_root_ctr_path
     export NVIDIA_DRIVER_ROOT=$driver_root
     export DRIVER_ROOT_CTR_PATH=$driver_root_ctr_path
 

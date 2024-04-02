@@ -12,6 +12,15 @@ metadata:
     "helm.sh/resource-policy": keep
   {{- end }}
 spec:
+  {{- if .Values.devRoot }}
+  devRoot: {{ .Values.devRoot }}
+  {{- end }}
+  {{- if .Values.hostRoot }}
+  hostRoot: {{ .Values.hostRoot }}
+  {{- end }}
+  {{- if .Values.driverRoot }}
+  driverRoot: {{ .Values.driverRoot }}
+  {{- end }}
   operator:
     {{- if .Values.operator.defaultRuntime }}
     defaultRuntime: {{ .Values.operator.defaultRuntime }}

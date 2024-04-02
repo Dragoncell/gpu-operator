@@ -15,6 +15,15 @@ data:
       if [[ -f /run/nvidia/validations/host-driver-ready ]]; then
         driver_root=/
         container_driver_root=/host
+        if [[ ! -z "$NVIDIA_CUSTOM_DRIVER_ROOT" ]]; then
+          if [[ "${NVIDIA_CUSTOM_DRIVER_ROOT}" = "${NVIDIA_CUSTOM_HOST_ROOT}" ]]; then
+            driver_root=${NVIDIA_CUSTOM_DRIVER_ROOT}
+          else
+            export NVIDIA_CTK_PATH="${NVIDIA_CUSTOM_DRIVER_ROOT}/toolkit/nvidia-ctk"
+            export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:${NVIDIA_CUSTOM_DRIVER_ROOT}/lib64"
+            export PATH="$PATH:${NVIDIA_CUSTOM_DRIVER_ROOT}/bin"
+          fi
+        fi
         break
       elif [[ -f /run/nvidia/validations/driver-ready ]]; then
         driver_root=/run/nvidia/driver
@@ -32,5 +41,8 @@ data:
     export CONTAINER_DRIVER_ROOT=$container_driver_root
     echo "CONTAINER_DRIVER_ROOT=$CONTAINER_DRIVER_ROOT"
 
+    echo "NVIDIA_CTK_PATH=$NVIDIA_CTK_PATH"
+    echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
+    echo "PATH=$PATH"
     echo "Starting nvidia-device-plugin"
     exec nvidia-device-plugin

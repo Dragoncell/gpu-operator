@@ -20,6 +20,12 @@ sandboxWorkloads:
   enabled: false
   defaultWorkload: "container"
 
+hostRoot: ""
+
+driverRoot: ""
+
+devRoot: ""
+
 daemonsets:
   labels: {}
   annotations: {}
