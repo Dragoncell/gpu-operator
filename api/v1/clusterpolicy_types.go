@@ -88,11 +88,11 @@ type ClusterPolicySpec struct {
 	KataManager KataManagerSpec `json:"kataManager,omitempty"`
 	// CCManager component spec
 	CCManager CCManagerSpec `json:"ccManager,omitempty"`
-	// Optional: Host root path
+	// Optional: Host root path, needs to be a chroot dir
 	HostRoot string `json:"hostRoot,omitempty"`
-	// Optional: Driver root path
+	// Optional: Driver root path, where driver installed on the host
 	DriverRoot string `json:"driverRoot,omitempty"`
-	// Optional: Dev root path
+	// Optional: Dev root path, where driver devices installed on the host
 	DevRoot string `json:"devRoot,omitempty"`
 }
 

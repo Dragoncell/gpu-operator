@@ -593,21 +593,33 @@ func runCommandWithWait(command string, args []string, sleepSeconds int, silent 
 	}
 }
 
-
-func checkChrootForDriverRoot() (bool) {
+func checkChrootForDriverRoot() bool {
 	// dev(contains sh, bash) is an important dir for chroot
 	essentialDirs := []string{"dev"}
 	for _, subdir := range essentialDirs {
 		fullpath := fmt.Sprintf("%s/%s", driverContainerRoot, subdir)
 		if _, err := os.Stat(fullpath); os.IsNotExist(err) {
-		  log.Infof("Detected driver root on the host missing %v, which means can not chroot", subdir)
+			log.Infof("Detected driver root on the host missing %v, which means can not chroot", subdir)
 			return false
 		}
 	}
 	return true
 }
 
-func getDriverRoot() (string, bool, string, string, bool) {
+type DriverRoot struct {
+	// a chroot container dir either /host or /run/nvidia/driver
+	driverChrootRoot string
+	// check the driver installed on the host root or not
+	hostRoot bool
+	// the command to run nvidia-smi check
+	SMIcommand string
+	// a driver contaner root where driver installed
+	driverContainerRoot string
+	// whether driver devices nodes needs to install or not
+	deviceNodes bool
+}
+
+func getDriverRoot() (driverRoot DriverRoot) {
 
 	// A few possible cases (= means container path maps to host path)
 	// a) /host = /                   /run/nvidia/driver = /run/nvidia/driver
@@ -619,18 +631,18 @@ func getDriverRoot() (string, bool, string, string, bool) {
 	// check if driver is pre-installed on the host and use host path for validation
 	if fileInfo, err := os.Lstat("/host/usr/bin/nvidia-smi"); err == nil && fileInfo.Size() != 0 {
 		log.Infof("Detected pre-installed driver on the host")
-		return "/host", true, "nvidia-smi", "/host", true
+		return DriverRoot{"/host", true, "nvidia-smi", "/host", true}
 	}
 
 	// case b)
 	// check if driver root can be chroot, if not, driver is pre-installed on host in a custom driver path
 	if !checkChrootForDriverRoot() {
 		log.Infof("Detected pre-installed driver on the host on %v driver path", driverHostRoot)
-		return "/host", true, driverHostRoot + "/bin/nvidia-smi", driverContainerRoot, false
+		return DriverRoot{"/host", true, driverHostRoot + "/bin/nvidia-smi", driverContainerRoot, false}
 	}
 
 	// case a) driver root can chroot
-	return driverContainerRoot, false , "nvidia-smi", driverContainerRoot, true
+	return DriverRoot{driverContainerRoot, false, "nvidia-smi", driverContainerRoot, true}
 }
 
 // For driver container installs, check existence of .driver-ctr-ready to confirm running driver
@@ -647,23 +659,24 @@ func assertDriverContainerReady(silent, withWaitFlag bool) error {
 }
 
 func (d *Driver) runValidation(silent bool) (string, bool, error, bool) {
-	driverChrootRoot, isHostDriver , nvidiaSMI, driverRoot, enableDevNodes := getDriverRoot()
-	if !isHostDriver {
+	// driverChrootRoot, isHostDriver , nvidiaSMI, driverRoot, enableDevNodes := getDriverRoot()
+	driverRoot := getDriverRoot()
+	if !driverRoot.hostRoot {
 		log.Infof("Driver is not pre-installed on the host. Checking driver container status.")
 		if err := assertDriverContainerReady(silent, withWaitFlag); err != nil {
-			return "", false, fmt.Errorf("error checking driver container status: %v", err), enableDevNodes
+			return "", false, fmt.Errorf("error checking driver container status: %v", err), driverRoot.deviceNodes
 		}
 	}
 
 	// invoke validation command
 	command := "chroot"
-	args := []string{driverChrootRoot, nvidiaSMI}
+	args := []string{driverRoot.driverChrootRoot, driverRoot.SMIcommand}
 
 	if withWaitFlag {
-		return driverRoot, isHostDriver, runCommandWithWait(command, args, sleepIntervalSecondsFlag, silent), enableDevNodes
+		return driverRoot.driverContainerRoot, driverRoot.hostRoot, runCommandWithWait(command, args, sleepIntervalSecondsFlag, silent), driverRoot.deviceNodes
 	}
 
-	return driverRoot, isHostDriver, runCommand(command, args, silent), enableDevNodes
+	return driverRoot.driverContainerRoot, driverRoot.hostRoot, runCommand(command, args, silent), driverRoot.deviceNodes
 }
 
 func (d *Driver) validate() error {

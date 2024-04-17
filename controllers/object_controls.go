@@ -169,11 +169,11 @@ const (
 	// DefaultMPSRoot is the default MPS root path on the host
 	DefaultMPSRoot = "/run/nvidia/mps"
 	// NvidiaHostRootEnvName is the name of envvar for specifying a custom path for the host root
-	NvidiaHostRootEnvName = "NVIDIA_CUSTOM_HOST_ROOT"
+	NvidiaHostRootEnvName = "HOST_ROOT"
 	// NvidiaDriverRootEnvName is the name of envvar for specifying a custom path for the driver root
-	NvidiaDriverRootEnvName = "NVIDIA_CUSTOM_DRIVER_ROOT"
+	NvidiaDriverRootEnvName = "DRIVER_ROOT"
 	// NvidiaDevRootEnvName is the name of envvar for specifying a custom path for the dev root
-	NvidiaDevRootEnvName = "NVIDIA_CUSTOM_DEV_ROOT"
+	NvidiaDevRootEnvName = "DEV_ROOT"
 )
 
 // ContainerProbe defines container probe types
@@ -1749,6 +1749,25 @@ func TransformMIGManager(obj *appsv1.DaemonSet, config *gpuv1.ClusterPolicySpec,
 		setContainerEnv(&(obj.Spec.Template.Spec.Containers[0]), CDIEnabledEnvName, "true")
 	}
 
+	// set host root path
+	if hostRoot := config.HostRoot; hostRoot != "" {
+		for index, volume := range obj.Spec.Template.Spec.Volumes {
+			if volume.Name == "host-root" {
+				obj.Spec.Template.Spec.Volumes[index].HostPath.Path = hostRoot
+			}
+		}
+		for index := range obj.Spec.Template.Spec.Containers {
+			setContainerEnv(&(obj.Spec.Template.Spec.Containers[index]), NvidiaHostRootEnvName, hostRoot)
+		}
+	}
+
+	// set driver root path
+	if driverRoot := config.DriverRoot; driverRoot != "" {
+		for index := range obj.Spec.Template.Spec.Containers {
+			setContainerEnv(&(obj.Spec.Template.Spec.Containers[index]), NvidiaDriverRootEnvName, driverRoot)
+		}
+	}
+
 	return nil
 }
 
@@ -2045,7 +2064,7 @@ func TransformValidator(obj *appsv1.DaemonSet, config *gpuv1.ClusterPolicySpec, 
 		n.logger.Info("WARN: errors transforming the validator containers: %v", validatorErr)
 	}
 
-  // set host root path
+	// set host root path
 	if hostRoot := config.HostRoot; hostRoot != "" {
 		for index, volume := range obj.Spec.Template.Spec.Volumes {
 			if volume.Name == "host-root" {

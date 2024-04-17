@@ -84,9 +84,9 @@ spec:
             value: all
           - name: MPS_ROOT
             value: /run/nvidia/mps
-          - name: NVIDIA_CUSTOM_DRIVER_ROOT
+          - name: DRIVER_ROOT
             value: ""
-          - name: NVIDIA_CUSTOM_HOST_ROOT
+          - name: HOST_ROOT
             value: ""
         volumeMounts:
           - name: nvidia-device-plugin-entrypoint
