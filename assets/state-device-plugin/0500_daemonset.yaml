@@ -88,6 +88,8 @@ spec:
             value: ""
           - name: HOST_ROOT
             value: ""
+          - name: DEV_ROOT
+            value: ""
         volumeMounts:
           - name: nvidia-device-plugin-entrypoint
             readOnly: true

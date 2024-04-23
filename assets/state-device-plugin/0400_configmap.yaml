@@ -11,23 +11,22 @@ data:
 
     driver_root=""
     container_driver_root=""
+    dev_root=""
     while true; do
       if [[ -f /run/nvidia/validations/host-driver-ready ]]; then
-        driver_root=/
+        dev_root=${DEV_ROOT:=/}
+        driver_root=${DRIVER_ROOT:=/}
         container_driver_root=/host
-        if [[ ! -z "$DRIVER_ROOT" ]]; then
-          if [[ "${DRIVER_ROOT}" = "${HOST_ROOT}" ]]; then
-            driver_root=${DRIVER_ROOT}
-          else
-            driver_root=${DRIVER_ROOT}
-            container_driver_root=/host${DRIVER_ROOT}
-            export NVIDIA_CTK_PATH="${DRIVER_ROOT}/toolkit/nvidia-ctk"
-          fi
+        # update container_driver_root when custom driver and host root are the same
+        if [[ "${DRIVER_ROOT}" != "${HOST_ROOT}" ]]; then
+          container_driver_root=/host${DRIVER_ROOT}
+          export NVIDIA_CTK_PATH="${DRIVER_ROOT}/toolkit/nvidia-ctk"
         fi
         break
       elif [[ -f /run/nvidia/validations/driver-ready ]]; then
         driver_root=/run/nvidia/driver
         container_driver_root=$driver_root
+        dev_root=$driver_root
         break
       else
         echo "waiting for the driver validations to be ready..."
@@ -41,8 +40,10 @@ data:
     export CONTAINER_DRIVER_ROOT=$container_driver_root
     echo "CONTAINER_DRIVER_ROOT=$CONTAINER_DRIVER_ROOT"
 
+    export NVIDIA_DEV_ROOT=$dev_root
+    echo "NVIDIA_DEV_ROOT=$NVIDIA_DEV_ROOT"
+
     echo "NVIDIA_CTK_PATH=$NVIDIA_CTK_PATH"
-    echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
-    echo "PATH=$PATH"
+
     echo "Starting nvidia-device-plugin"
     exec nvidia-device-plugin

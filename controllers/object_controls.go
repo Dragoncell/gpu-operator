@@ -1357,6 +1357,15 @@ func TransformDevicePlugin(obj *appsv1.DaemonSet, config *gpuv1.ClusterPolicySpe
 		}
 	}
 
+	// set dev root path
+	if devRoot := config.DevRoot; devRoot != "" {
+		// If devRoot is specified, create device nodes should be disabled
+		for index := range obj.Spec.Template.Spec.Containers {
+			setContainerEnv(&(obj.Spec.Template.Spec.Containers[index]), NvidiaDevRootEnvName, devRoot)
+			setContainerEnv(&(obj.Spec.Template.Spec.Containers[index]), "PASS_DEVICE_SPECS", "false")
+		}
+	}
+
 	return nil
 }
 
