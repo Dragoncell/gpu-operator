@@ -1249,6 +1249,7 @@ func TransformToolkit(obj *appsv1.DaemonSet, config *gpuv1.ClusterPolicySpec, n 
 		// If devRoot is specified, create device nodes should be disabled
 		for index := range obj.Spec.Template.Spec.Containers {
 			setContainerEnv(&(obj.Spec.Template.Spec.Containers[index]), NvidiaDevRootEnvName, devRoot)
+			// Set CREATE_DEVICE_NODES as "" to disable device nodes creation
 			setContainerEnv(&(obj.Spec.Template.Spec.Containers[index]), "CREATE_DEVICE_NODES", "")
 		}
 	}

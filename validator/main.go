@@ -599,14 +599,14 @@ func checkChrootForDriverRoot() bool {
 	for _, subdir := range essentialDirs {
 		fullpath := fmt.Sprintf("%s/%s", driverContainerRoot, subdir)
 		if _, err := os.Stat(fullpath); os.IsNotExist(err) {
-			log.Infof("Detected driver root on the host missing %v, which means can not chroot", subdir)
+			log.Infof("Detected driver root on the host missing %s, which means can not chroot", subdir)
 			return false
 		}
 	}
 	return true
 }
 
-type DriverRoot struct {
+type DriverInfo struct {
 	// a chroot container dir either /host or /run/nvidia/driver
 	driverChrootRoot string
 	// check the driver installed on the host root or not
@@ -619,7 +619,7 @@ type DriverRoot struct {
 	deviceNodes bool
 }
 
-func getDriverRoot() (driverRoot DriverRoot) {
+func getDriverRoot() (DriverInfo) {
 
 	// A few possible cases (= means container path maps to host path)
 	// a) /host = /                   /run/nvidia/driver = /run/nvidia/driver
@@ -631,18 +631,18 @@ func getDriverRoot() (driverRoot DriverRoot) {
 	// check if driver is pre-installed on the host and use host path for validation
 	if fileInfo, err := os.Lstat("/host/usr/bin/nvidia-smi"); err == nil && fileInfo.Size() != 0 {
 		log.Infof("Detected pre-installed driver on the host")
-		return DriverRoot{"/host", true, "nvidia-smi", "/host", true}
+		return DriverInfo{"/host", true, "nvidia-smi", "/host", true}
 	}
 
 	// case b)
 	// check if driver root can be chroot, if not, driver is pre-installed on host in a custom driver path
 	if !checkChrootForDriverRoot() {
 		log.Infof("Detected pre-installed driver on the host on %v driver path", driverHostRoot)
-		return DriverRoot{"/host", true, driverHostRoot + "/bin/nvidia-smi", driverContainerRoot, false}
+		return DriverInfo{"/host", true, driverHostRoot + "/bin/nvidia-smi", driverContainerRoot, false}
 	}
 
 	// case a) driver root can chroot
-	return DriverRoot{driverContainerRoot, false, "nvidia-smi", driverContainerRoot, true}
+	return DriverInfo{driverContainerRoot, false, "nvidia-smi", driverContainerRoot, true}
 }
 
 // For driver container installs, check existence of .driver-ctr-ready to confirm running driver
@@ -658,26 +658,27 @@ func assertDriverContainerReady(silent, withWaitFlag bool) error {
 	return runCommand(command, args, silent)
 }
 
-func (d *Driver) runValidation(silent bool) (string, bool, error, bool) {
+func (d *Driver) runValidation(silent bool) (DriverInfo, error) {
 	// driverChrootRoot, isHostDriver , nvidiaSMI, driverRoot, enableDevNodes := getDriverRoot()
-	driverRoot := getDriverRoot()
-	if !driverRoot.hostRoot {
+	driverInfo := getDriverRoot()
+	if !driverInfo.hostRoot {
 		log.Infof("Driver is not pre-installed on the host. Checking driver container status.")
 		if err := assertDriverContainerReady(silent, withWaitFlag); err != nil {
-			return "", false, fmt.Errorf("error checking driver container status: %v", err), driverRoot.deviceNodes
+			return driverInfo, fmt.Errorf("error checking driver container status: %v", err)
 		}
 	}
 
 	// invoke validation command
 	command := "chroot"
-	args := []string{driverRoot.driverChrootRoot, driverRoot.SMIcommand}
+	args := []string{driverInfo.driverChrootRoot, driverInfo.SMIcommand}
 
 	if withWaitFlag {
-		return driverRoot.driverContainerRoot, driverRoot.hostRoot, runCommandWithWait(command, args, sleepIntervalSecondsFlag, silent), driverRoot.deviceNodes
+		return driverInfo, runCommandWithWait(command, args, sleepIntervalSecondsFlag, silent)
 	}
 
-	return driverRoot.driverContainerRoot, driverRoot.hostRoot, runCommand(command, args, silent), driverRoot.deviceNodes
+	return driverInfo, runCommand(command, args, silent)
 }
+
 
 func (d *Driver) validate() error {
 	// delete driver status file is already present
@@ -692,7 +693,7 @@ func (d *Driver) validate() error {
 		return err
 	}
 
-	driverRoot, isHostDriver, err, enableDevNodes := d.runValidation(false)
+	driverInfo, err := d.runValidation(false)
 	if err != nil {
 		log.Error("driver is not ready")
 		return err
@@ -700,7 +701,7 @@ func (d *Driver) validate() error {
 
 	if !disableDevCharSymlinkCreation {
 		log.Info("creating symlinks under /dev/char that correspond to NVIDIA character devices")
-		err = createDevCharSymlinks(driverRoot, isHostDriver, enableDevNodes)
+		err = createDevCharSymlinks(driverInfo.driverContainerRoot, driverInfo.hostRoot, driverInfo.deviceNodes)
 		if err != nil {
 			msg := strings.Join([]string{
 				"Failed to create symlinks under /dev/char that point to all possible NVIDIA character devices.",
@@ -721,7 +722,7 @@ func (d *Driver) validate() error {
 	}
 
 	statusFile := driverStatusFile
-	if isHostDriver {
+	if driverInfo.hostRoot {
 		statusFile = hostDriverStatusFile
 	}
 
