@@ -92,7 +92,7 @@ type ClusterPolicySpec struct {
 	HostRoot string `json:"hostRoot,omitempty"`
 	// Optional: Driver root path, where driver installed on the host
 	DriverRoot string `json:"driverRoot,omitempty"`
-	// Optional: Dev root path, where driver devices installed on the host
+	// Optional: Dev root path, where driver devices are created on the host
 	DevRoot string `json:"devRoot,omitempty"`
 }
 
