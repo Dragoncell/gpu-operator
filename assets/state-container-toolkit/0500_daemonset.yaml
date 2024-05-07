@@ -36,6 +36,8 @@ spec:
             value: "true"
           - name: COMPONENT
             value: driver
+          - name: DRIVER_ROOT
+            value: ""
         securityContext:
           privileged: true
           seLinuxOptions:

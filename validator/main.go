@@ -121,6 +121,7 @@ var (
 	metricsPort                   int
 	defaultGPUWorkloadConfigFlag  string
 	disableDevCharSymlinkCreation bool
+	driverHostRoot                string
 )
 
 // defaultGPUWorkloadConfig is "vm-passthrough" unless
@@ -138,8 +139,6 @@ const (
 	hostDevCharPath = "/host-dev-char"
 	// driverContainerRoot indicates the path on the host where driver container mounts it's root filesystem
 	driverContainerRoot = "/run/nvidia/driver"
-	// driverHostRoot indicates the path on the host where driver located in can not chroot cases
-	driverHostRoot = "/home/kubernetes/bin/nvidia"
 	// driverStatusFile indicates status file for containerizeddriver readiness
 	driverStatusFile = "driver-ready"
 	// hostDriverStatusFile indicates status file for host driver readiness
@@ -319,6 +318,13 @@ func main() {
 			Usage:       "disable creation of symlinks under /dev/char corresponding to NVIDIA character devices",
 			Destination: &disableDevCharSymlinkCreation,
 			EnvVars:     []string{"DISABLE_DEV_CHAR_SYMLINK_CREATION"},
+		},
+		&cli.StringFlag{
+			Name:        "driver-root",
+			Value:       "",
+			Usage:       "driver root on the host",
+			Destination: &driverHostRoot,
+			EnvVars:     []string{"DRIVER_ROOT"},
 		},
 	}
 
@@ -664,7 +670,7 @@ func (d *Driver) runValidation(silent bool) (DriverInfo, error) {
 	if !driverInfo.hostRoot {
 		log.Infof("Driver is not pre-installed on the host. Checking driver container status.")
 		if err := assertDriverContainerReady(silent, withWaitFlag); err != nil {
-			return driverInfo, fmt.Errorf("error checking driver container status: %v", err)
+			return driverInfo, fmt.Errorf("error checking driver container status: %w", err)
 		}
 	}
 

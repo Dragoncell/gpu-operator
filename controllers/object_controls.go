@@ -1242,6 +1242,9 @@ func TransformToolkit(obj *appsv1.DaemonSet, config *gpuv1.ClusterPolicySpec, n 
 		for index := range obj.Spec.Template.Spec.Containers {
 			setContainerEnv(&(obj.Spec.Template.Spec.Containers[index]), NvidiaDriverRootEnvName, driverRoot)
 		}
+		for index := range obj.Spec.Template.Spec.InitContainers {
+			setContainerEnv(&(obj.Spec.Template.Spec.InitContainers[index]), NvidiaDriverRootEnvName, driverRoot)
+		}
 	}
 
 	// set dev root path
@@ -2089,6 +2092,9 @@ func TransformValidator(obj *appsv1.DaemonSet, config *gpuv1.ClusterPolicySpec, 
 			if volume.Name == "driver-install-path" {
 				obj.Spec.Template.Spec.Volumes[index].HostPath.Path = driverRoot
 			}
+		}
+		for index := range obj.Spec.Template.Spec.InitContainers {
+			setContainerEnv(&(obj.Spec.Template.Spec.InitContainers[index]), NvidiaDriverRootEnvName, driverRoot)
 		}
 	}
 
